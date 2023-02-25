@@ -3,27 +3,9 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug Tell",
-      "program": "${workspaceFolder:Tell}/.build/debug/Tell",
-      "args": [],
-      "cwd": "${workspaceFolder:Tell}",
-      "preLaunchTask": "swift: Build Debug Tell"
-    },
-    {
-      "type": "lldb",
-      "request": "launch",
-      "name": "Release Tell",
-      "program": "${workspaceFolder:Tell}/.build/release/Tell",
-      "args": [],
-      "cwd": "${workspaceFolder:Tell}",
-      "preLaunchTask": "swift: Build Release Tell"
-    },
-    {
-      "type": "lldb",
-      "request": "launch",
       "name": "Debug tell",
       "program": "${workspaceFolder:tell}/.build/debug/tell",
-      "args": [],
+      "args": ["hello", "--output", "out.caf", "--slice"],
       "cwd": "${workspaceFolder:tell}",
       "preLaunchTask": "swift: Build Debug tell"
     },
@@ -32,7 +14,7 @@
       "request": "launch",
       "name": "Release tell",
       "program": "${workspaceFolder:tell}/.build/release/tell",
-      "args": [],
+      "args": ["hello --output out.caf --slice"],
       "cwd": "${workspaceFolder:tell}",
       "preLaunchTask": "swift: Build Release tell"
     }

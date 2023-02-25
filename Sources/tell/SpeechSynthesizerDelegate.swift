@@ -19,7 +19,7 @@ public class SpeechSynthesizerDelegate: NSObject, AVSpeechSynthesizerDelegate {
     speaking = true
     muted = false
     utter = utterance.speechString
-    print("didStart")
+    print("Speech Synthesizer did start", to: &errStream)
   }
 
   public func speechSynthesizer(
@@ -27,7 +27,7 @@ public class SpeechSynthesizerDelegate: NSObject, AVSpeechSynthesizerDelegate {
     didPause _: AVSpeechUtterance
   ) {
     speaking = false
-    print("didPause")
+    print("Speech Synthesizer did pause", to: &errStream)
   }
 
   public func speechSynthesizer(
@@ -35,7 +35,7 @@ public class SpeechSynthesizerDelegate: NSObject, AVSpeechSynthesizerDelegate {
     didCancel _: AVSpeechUtterance
   ) {
     speaking = false
-    print("didCancel")
+    print("Speech Synthesizer did cancel", to: &errStream)
   }
 
   public func speechSynthesizer(
@@ -43,7 +43,7 @@ public class SpeechSynthesizerDelegate: NSObject, AVSpeechSynthesizerDelegate {
     didContinue _: AVSpeechUtterance
   ) {
     speaking = true
-    print("didContinue")
+    print("Speech Synthesizer did continue", to: &errStream)
   }
 
   public func speechSynthesizer(
@@ -52,14 +52,15 @@ public class SpeechSynthesizerDelegate: NSObject, AVSpeechSynthesizerDelegate {
     utterance _: AVSpeechUtterance
   ) {
     range = characterRange
-    print("willSpeakRangeOfSpeechString", range)
+    print(String(format: "Speech Synthesizer speaking range %d to %d...",
+                 range.lowerBound, range.upperBound), to: &errStream)
   }
 
   public func speechSynthesizer(
     _: AVSpeechSynthesizer,
     didFinish _: AVSpeechUtterance
   ) {
-    print("didFinish")
+    print("Speech Synthesizer did finish", to: &errStream)
     task?.cancel()
     speaking = false
   }

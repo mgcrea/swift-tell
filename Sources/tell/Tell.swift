@@ -1,5 +1,6 @@
 import ArgumentParser
 import AVFAudio
+import Darwin
 import Foundation
 
 // https://github.com/apple/swift-argument-parser/blob/main/Examples/count-lines/CountLines.swift
@@ -7,35 +8,37 @@ import Foundation
 @main
 @available(macOS 10.15, *)
 struct Tell: AsyncParsableCommand {
+    public private(set) var version = "1.0.0"
+
     @Flag(help: "List available voices")
     var listVoices = false
 
+    @Flag(name: .customLong("version"), help: "Print version")
+    var showVersion = false
+
     @Flag(help: "The speech utterance uses markup written using the Speech Synthesis Markup Language (SSML) standard")
     var ssml = false
-
-    @Option(name: .shortAndLong, help: "The number of times to repeat 'phrase'")
-    var count: Int?
 
     // print(AVSpeechUtteranceMinimumSpeechRate, AVSpeechUtteranceMaximumSpeechRate)
     @Option(name: .shortAndLong, help: "The utterance rate, [0.0 - 1.0] Default = 0.5")
     var rate: Float?
 
-    @Option(name: .shortAndLong, help: "The utterance pitchMultiplier, [0.5 - 2.0] Default = 1.0")
+    @Option(name: .customLong("pitch"), help: "The utterance pitchMultiplier, [0.5 - 2.0] Default = 1.0")
     var pitchMultiplier: Float?
 
-    @Option(name: .shortAndLong, help: "The utterance volume, [0.0 - 1.0] Default = 1.0")
+    @Option(name: .long, help: "The utterance volume, [0.0 - 1.0] Default = 1.0")
     var volume: Float?
 
-    @Option(name: .long, help: "The utterance preUtteranceDelay, Default = 0.0")
+    @Option(name: .customLong("pre"), help: "The utterance preUtteranceDelay, Default = 0.0")
     var preUtteranceDelay: Double?
 
-    @Option(name: .long, help: "The utterance postUtteranceDelay, Default = 0.0")
+    @Option(name: .customLong("post"), help: "The utterance postUtteranceDelay, Default = 0.0")
     var postUtteranceDelay: Double?
 
-    @Option(name: .long, help: "The utterance voice")
+    @Option(name: .shortAndLong, help: "The utterance voice")
     var voice: String?
 
-    @Option(name: .long, help: "The utterance language, Default = Locale.current.identifier")
+    @Option(name: .shortAndLong, help: "The utterance language, Default = locale")
     var language: String = Locale.current.identifier
 
     @Option(
@@ -129,13 +132,17 @@ extension Tell {
     }
 
     mutating func run() async throws {
+        if showVersion {
+            print(version)
+            return
+        }
         if listVoices {
             printVoices()
             return
         }
 
         guard inputContents != nil else {
-            print("either 'phrase' or 'file' required.")
+            print(Tell.helpMessage())
             return
         }
 
@@ -188,8 +195,8 @@ extension Tell {
             let slice: Bool = slice
             let outputUrlExtension = outputUrl.pathExtension
             let baseString = outputUrlExtension.isEmpty ?
-                outputUrl.absoluteString :
-                outputUrl.absoluteString.replacingOccurrences(of: "." + outputUrlExtension, with: "")
+                outputUrl.relativeString :
+                outputUrl.relativeString.replacingOccurrences(of: "." + outputUrlExtension, with: "")
 
             synthesizer.write(utterance) { (buffer: AVAudioBuffer) in
                 guard let pcmBuffer = buffer as? AVAudioPCMBuffer else {
@@ -202,6 +209,7 @@ extension Tell {
                     } else {
                         // Main file
                         if outputFile == nil {
+                            print(String(format: "Writing to file %@...", outputUrl.absoluteString), to: &errStream)
                             outputFile = try AVAudioFile(
                                 forWriting: outputUrl,
                                 settings: pcmBuffer.format.settings,
@@ -213,13 +221,13 @@ extension Tell {
                         try outputFile?.write(from: pcmBuffer)
 
                         if slice && delegate.range.upperBound > 0 {
-                            // Main file
+                            // Slice file
                             if outputRangeFiles[delegate.range] == nil {
                                 let filePath = String(format: baseString + "_%d_%d" + "." + outputUrlExtension,
                                                       delegate.range.lowerBound,
                                                       delegate.range.upperBound)
 
-                                dump(filePath)
+                                print(String(format: "Writing slice to file %@...", filePath), to: &errStream)
                                 outputRangeFiles[delegate.range] = try AVAudioFile(
                                     forWriting: URL(fileURLWithPath: filePath),
                                     settings: pcmBuffer.format.settings,
